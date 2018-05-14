@@ -1,7 +1,6 @@
 package jme3test.model.anim;
 
-import com.jme3.anim.AnimComposer;
-import com.jme3.anim.SkinningControl;
+import com.jme3.anim.*;
 import com.jme3.anim.tween.action.Action;
 import com.jme3.anim.tween.action.BlendAction;
 import com.jme3.anim.tween.action.BlendableAction;
@@ -125,8 +124,19 @@ public class TestAnimMigration extends SimpleApplication {
             }
         }, "toggleArmature");
 
+        inputManager.addMapping("mask", new KeyTrigger(KeyInput.KEY_M));
+        inputManager.addListener(new ActionListener() {
+            @Override
+            public void onAction(String name, boolean isPressed, float tpf) {
+                if (isPressed) {
+                    composer.setCurrentAction("Wave", "LeftArm");
+                }
+            }
+        }, "mask");
+
         inputManager.addMapping("blendUp", new KeyTrigger(KeyInput.KEY_UP));
         inputManager.addMapping("blendDown", new KeyTrigger(KeyInput.KEY_DOWN));
+
         inputManager.addListener(new AnalogListener() {
 
             @Override
@@ -143,7 +153,7 @@ public class TestAnimMigration extends SimpleApplication {
                     action.getBlendSpace().setValue(blendValue);
                     action.setSpeed(blendValue);
                 }
-                System.err.println(blendValue);
+                //System.err.println(blendValue);
             }
         }, "blendUp", "blendDown");
     }
@@ -162,10 +172,15 @@ public class TestAnimMigration extends SimpleApplication {
             for (String name : composer.getAnimClipsNames()) {
                 anims.add(name);
             }
-            composer.actionSequence("Sequence",
+            composer.actionSequence("Sequence1",
                     composer.makeAction("Walk"),
                     composer.makeAction("Run"),
-                    composer.makeAction("Jumping")).setSpeed(2);
+                    composer.makeAction("Jumping")).setSpeed(1);
+
+            composer.actionSequence("Sequence2",
+                    composer.makeAction("Walk"),
+                    composer.makeAction("Run"),
+                    composer.makeAction("Jumping")).setSpeed(-1);
 
             action = composer.actionBlended("Blend", new LinearBlendSpace(1, 4),
                     "Walk", "Run");
@@ -174,8 +189,11 @@ public class TestAnimMigration extends SimpleApplication {
 
             composer.action("Walk").setSpeed(-1);
 
-            anims.addFirst("Sequence");
+            composer.makeLayer("LeftArm", ArmatureMask.createMask(sc.getArmature(), "shoulder.L"));
+
             anims.addFirst("Blend");
+            anims.addFirst("Sequence2");
+            anims.addFirst("Sequence1");
 
             if (anims.isEmpty()) {
                 return;
